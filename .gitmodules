@@ -1,0 +1,6 @@
+[submodule "slt_tech_core"]
+	path = slt_tech_core
+	url = https://github.com/SharpLinesTech/slt_tech_core.git
+[submodule "third_party/glfw"]
+	path = third_party/glfw
+	url = https://github.com/glfw/glfw.git
