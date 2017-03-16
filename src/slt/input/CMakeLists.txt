@@ -13,3 +13,6 @@ add_library(slt_input OBJECT
 
 
 SLT_MODULE_CONFIG(slt_input)
+
+slt_unit_test(input_manager_test inputs)
+target_link_libraries(input_manager_test slt_runtime)

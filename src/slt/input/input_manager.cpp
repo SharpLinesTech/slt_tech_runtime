@@ -53,6 +53,11 @@ BinaryInput* InputManager::addBinaryInput(StringView name) {
   binary_inputs_.emplace_back(new_input);
   auto emplaced = inputs_.emplace(name.toString(), new_input);
   SLT_ASSERT(emplaced.second);
+
+  auto pending_found = pending_bindings_.find(name);
+  if (pending_found != pending_bindings_.end()) {
+    bind(pending_found->second, name);
+  }
   return new_input;
 }
 
@@ -62,6 +67,11 @@ FloatInput* InputManager::addFloatInput(StringView name) {
   float_inputs_.emplace_back(new_input);
   auto emplaced = inputs_.emplace(name.toString(), new_input);
   SLT_ASSERT(emplaced.second);
+
+  auto pending_found = pending_bindings_.find(name);
+  if (pending_found != pending_bindings_.end()) {
+    bind(pending_found->second, name);
+  }
   return new_input;
 }
 
@@ -71,6 +81,11 @@ BinaryCommand* InputManager::addBinaryCommand(StringView name) {
   binary_commands_.emplace_back(new_cmd);
   auto emplaced = commands_.emplace(name.toString(), new_cmd);
   SLT_ASSERT(emplaced.second);
+
+  auto pending_found = pending_bindings_.find(name);
+  if (pending_found != pending_bindings_.end()) {
+    bind(pending_found->second, name);
+  }
   return new_cmd;
 }
 
@@ -80,6 +95,11 @@ FloatCommand* InputManager::addFloatCommand(StringView name) {
   float_commands_.emplace_back(new_cmd);
   auto emplaced = commands_.emplace(name.toString(), new_cmd);
   SLT_ASSERT(emplaced.second);
+
+  auto pending_found = pending_bindings_.find(name);
+  if (pending_found != pending_bindings_.end()) {
+    bind(pending_found->second, name);
+  }
   return new_cmd;
 }
 
@@ -88,9 +108,14 @@ void InputManager::bind(StringView command, StringView input) {
   auto inp = inputs_.find(input);
 
   SLT_ASSERT(cmd != commands_.end());
-  SLT_ASSERT(inp != inputs_.end());
 
-  cmd->second->assign(inp->second);
+  if (inp == inputs_.end()) {
+    pending_bindings_.emplace(input, command) ;
+  }
+  else {
+
+    cmd->second->assign(inp->second);
+  }
 }
 
 void BinaryInput::update(bool value) {

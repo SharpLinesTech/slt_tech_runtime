@@ -93,6 +93,8 @@ class InputManager {
   std::vector<std::unique_ptr<FloatInput>> float_inputs_;
   std::vector<std::unique_ptr<BinaryCommand>> binary_commands_;
   std::vector<std::unique_ptr<FloatCommand>> float_commands_;
+
+  std::map<std::string, std::string, std::less<>> pending_bindings_;
 };
 }
 }
