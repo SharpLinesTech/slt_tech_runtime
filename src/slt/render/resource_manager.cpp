@@ -1,6 +1,7 @@
 #include "slt/render/resource_manager.h"
 #include "slt/core/core.h"
 #include "slt/file/read.h"
+#include "slt/log/log.h"
 #include "slt/runtime/runtime.h"
 
 namespace slt {
@@ -21,18 +22,24 @@ void performAsyncLoad(StringView path, StringView name, CACHE_T* cache,
   using DATA_T = typename RES_T::Data_t;
 
   auto perform_load = [name, cache, path, manager]() {
+    manager->pending_loads_ += 1;
     auto name_str = name.toString();
 
     auto on_load = [name_str, cache, manager](DATA_T data) {
       try {
         cache->completePending(name_str, new RES_T(std::move(data), manager));
       } catch(std::exception const& e) {
+        slt::log->info("resource initfailure: {} {}", name_str, e.what());
         cache->failPending(name_str, ResourceLoadError(e.what()));
       }
+
+      manager->pending_loads_ -= 1;
     };
 
-    auto on_fail = [name_str, cache](auto err) {
+    auto on_fail = [name_str, cache, manager](auto err) {
       cache->failPending(name_str, ResourceLoadError(err.what()));
+      slt::log->info("resource load failure: {}", name_str);
+      manager->pending_loads_ -= 1;
     };
 
     file::asyncReadObject<DATA_T>(
@@ -42,6 +49,12 @@ void performAsyncLoad(StringView path, StringView name, CACHE_T* cache,
 
   cache->asyncAdd(name, cb, fail_cb, perform_load);
 }
+}
+
+ModelRef ResourceManager::createModel(StringView name, ModelData const& data) {
+  auto new_model = new _::Model(data, this);
+  models_.add(name.toString(), new_model);
+  return ModelRef(new_model);
 }
 
 void ResourceManager::loadModel(StringView name, ModelLoadCallback cb,
@@ -104,6 +117,12 @@ uint16_t ResourceManager::getAttributeBindLoc(std::string const& name) {
   return bind_loc->second;
 }
 
+void ResourceManager::waitForAllPendingLoads() {
+  Core::instance->main_queue.executeUntil([this](){
+    return pending_loads_ == 0;
+  });
+}
+
 void ResourceManager::loadDefaultResources() {
   registerAttribute("slt_vertex", 0);
   registerAttribute("slt_normal", 1);
@@ -117,7 +136,10 @@ void ResourceManager::loadDefaultResources() {
   unit_quad_data.attribs_[0].offset = 0;
 
   unit_quad_data.data_ = {
-      0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
+      0.0f, 0.0f, 
+      0.0f, 1.0f, 
+      1.0f, 0.0f, 
+      1.0f, 1.0f,
   };
 
   unit_quad_data.drawOp_.prim = render::PrimType::TRI_STRIP;

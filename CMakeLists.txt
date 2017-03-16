@@ -43,12 +43,16 @@ foreach(TPT ${THIRD_PARTY_TARGETS})
   set_target_properties(${TPT} PROPERTIES VALIDATE_POSTFIX _v)
 endforeach()
 
-add_library(slt_runtime_glfw
-  $<TARGET_OBJECTS:glad>
+add_library(slt_runtime
+  $<TARGET_OBJECTS:slt_cam>
   $<TARGET_OBJECTS:slt_input>
   $<TARGET_OBJECTS:slt_render>
-  $<TARGET_OBJECTS:slt_render_opengl>
   $<TARGET_OBJECTS:slt_runtime_common>
+)
+
+add_library(slt_runtime_glfw
+  $<TARGET_OBJECTS:glad>
+  $<TARGET_OBJECTS:slt_render_opengl>
   $<TARGET_OBJECTS:slt_runtime_glfw_impl>
 )
 

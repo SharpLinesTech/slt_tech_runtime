@@ -32,6 +32,8 @@ class ResourceManager {
 
   UniformBufferRef createUbo(StringView, UniformBlockRef);
 
+  ModelRef createModel(StringView, ModelData const&);
+
   // Asynchronous:
   void loadModel(StringView, ModelLoadCallback,
                  ResourceLoadFailedCallback = nullptr);
@@ -52,6 +54,9 @@ class ResourceManager {
     return unit_quad_;
   }
 
+  void waitForAllPendingLoads();
+
+  unsigned int pending_loads_ = 0;
  private:
   _::AsyncLoadingResourceCache<_::Program> programs_;
   _::AsyncLoadingResourceCache<_::Model> models_;
